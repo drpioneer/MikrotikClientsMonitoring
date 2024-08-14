@@ -1,7 +1,7 @@
 # Clients monitoring script
 # Script uses ideas by drPioneer
 # https://github.com/drpioneer/MikrotikClientsMonitoring/blob/main/monitor.rsc
-# https://forummikrotik.ru/viewforum.php?f=14
+# https://forummikrotik.ru/viewtopic.php?p=95254#p95254
 # tested on ROS 6.49.15 & 7.14.3
 # updated 2024/08/14
 
