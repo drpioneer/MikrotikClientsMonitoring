@@ -6,7 +6,7 @@
 # updated 2024/08/14
 
 :local manualClientsList {
-  {name="EBreHuu"; mac="00:00:00:00:00:00";};
+  {name="EBreHuu"; mac="00:00:00:00:00:00"};
   {name="rAJluHa"; mac="00:00:00:00:00:00"};
   {name="Erop"; mac="00:00:00:00:00:00"};
   {name="DaHuuJl"; mac="00:00:00:00:00:00"};
