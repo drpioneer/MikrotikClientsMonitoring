@@ -3,9 +3,9 @@
 # https://github.com/drpioneer/MikrotikClientsMonitoring/blob/main/monitor.rsc
 # https://forummikrotik.ru/viewtopic.php?p=95254#p95254
 # tested on ROS 6.49.15 & 7.14.3
-# updated 2024/09/04
+# updated 2024/09/05
 
-:local timeThreshold 15;                                                            # threshold time in minutes to out of zone device
+:local timeThreshold 21;                                                            # threshold time in minutes to out of zone device
 :local customClientList {
   {name="EBreHuu"; mac="00:00:00:00:00:00"};
   {name="rAJluHa"; mac="00:00:00:00:00:00"};
