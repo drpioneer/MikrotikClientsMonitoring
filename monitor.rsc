@@ -3,7 +3,7 @@
 # https://github.com/drpioneer/MikrotikClientsMonitoring/blob/main/monitor.rsc
 # https://forummikrotik.ru/viewtopic.php?p=95497
 # tested on ROS 6.49.17 & 7.16.1
-# updated 2024/11/07
+# updated 2024/11/12
 
 :local timeThreshold 21;                                                          # threshold time in minutes to out of zone device
 :local customList {
@@ -17,7 +17,6 @@
   {name="TaTbRHa"; mac="00:00:00:00:00:00"}};                                     # custom clients list
 
 :global clients; :if ([:len $clients]=0) do={:set $clients {name=[toarray ""];mac=[toarray ""];time=[toarray 0];msg=[toarray false]}}
-:local Out do={:put $1; /log warning $1};                                         # information output function
 :local Name do={                                                                  # client name detection function
   :global customList; :local name ""
   :foreach client in=$customList do={
@@ -83,21 +82,21 @@
     :if ([:len $name]=0) do={:set $name [get $dhcpLse host-name]}
     :if ([:len $name]=0) do={:set $name "NoName $findMac"}
     :local hostMac ""; :do {:set $hostMac [/interface bridge host get [find mac-address=$findMac] mac-address]} on-error={}
-    :local index; :set $index [:find ($clients->"mac") $findMac]
+    :local stringMsg ""; :local index; :set $index [:find ($clients->"mac") $findMac]
     :if ([:len $index]=0) do={                                                    # when client is not presented in base of clients ->
       :set $index ([:len ($clients->"mac")]);                                     # last index for new client in base
       :set ($clients->"mac" ->$index) $findMac
       :set ($clients->"name"->$index) $name
       :if ($hostMac~"([0-9A-F]{2}[:]){5}[0-9A-F]{2}") do={                        # when client is presented in bridge hosts ->
-        :local stringMsg ">+ $($clients->"name"->$index) OKOJlO '$idDev' +<";     # client is 'near'
-        [$Out $stringMsg]
         :set ($clients->"time"->$index) [$T2U];                                   # time of set status 'near'
         :set ($clients->"msg"->$index) true;                                      # message 'near' is sent
+        :set $stringMsg ">+ $($clients->"name"->$index) OKOJlO '$idDev' +<";      # client is 'near'
+        /log warning $stringMsg
       } else={                                                                    # when client is not presented in bridge hosts ->
-        :local stringMsg ">- $($clients->"name"->$index) BHE 3OHbl '$idDev' -<";  # client is 'out of zone'
-        [$Out $stringMsg]
         :set ($clients->"time"->$index) (-[$T2U]);                                # time of set status 'out of zone'
-        :set ($clients->"msg"->$index) false};                                    # message 'out of zone' is sent
+        :set ($clients->"msg"->$index) false;                                     # message 'out of zone' is sent
+        :set $stringMsg ">- $($clients->"name"->$index) BHE 3OHbl '$idDev' -<";   # client is 'out of zone'
+        /log warning $stringMsg}
     } else={                                                                      # when client is presented in base of clients ->
       :set ($clients->"name"->$index) $name
       :if ($hostMac~"([0-9A-F]{2}[:]){5}[0-9A-F]{2}") do={                        # when client is presented in bridge hosts ->  
@@ -109,12 +108,14 @@
       :if (($clients->"time"->$index)<0) do={                                     # when client has status 'out of zone' ->
         :if ($clients->"msg"->$index) do={                                        # when message 'out of zone' was not sent ->
           :if ((-($clients->"time"->$index)+$timeThreshold)<[$T2U]) do={          # when status 'out of zone' more threshold time ->
-            :local stringMsg "-- $($clients->"name"->$index) BHE 3OHbl '$idDev' c $[$U2T (-($clients->"time"->$index)) "time"] --"; # client is 'out of zone'
-            [$Out $stringMsg]
-            :set ($clients->"msg"->$index) false}}};                              # message 'out of zone' is sent
+            :set ($clients->"msg"->$index) false;                                 # message 'out of zone' is sent
+            :set $stringMsg "-- $($clients->"name"->$index) BHE 3OHbl '$idDev' c $[$U2T (-($clients->"time"->$index)) "time"] --"; # client is 'out of zone'
+            /log warning $stringMsg}}}
       :if (($clients->"time"->$index)>0) do={                                     # when client has status 'near' ->
         :if (!($clients->"msg"->$index)) do={                                     # when message 'near' was not sent -> 
-          :local stringMsg "++ $($clients->"name"->$index) OKOJlO '$idDev' ++";   # client is 'near'
-          [$Out $stringMsg]
-          :set ($clients->"msg"->$index) true}}}};                                # message 'near' is sent
-}
+          :set ($clients->"msg"->$index) true;                                    # message 'near' is sent
+          :set $stringMsg "++ $($clients->"name"->$index) OKOJlO '$idDev' ++";    # client is 'near'
+          /log warning $stringMsg}}}
+    :if (($clients->"time"->$index)>0) do={:set $stringMsg "++ $($clients->"name"->$index) OKOJlO '$idDev' ++"; :put $stringMsg}
+    :if (($clients->"time"->$index)<0) do={:set $stringMsg "-- $($clients->"name"->$index) BHE 3OHbl '$idDev' --"; :put $stringMsg}
+}}
